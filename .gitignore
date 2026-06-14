@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+public/
+.wrangler/
+
+# Local env + secrets (never commit credentials)
+.env
+.env.*
+.dev.vars
+*.dev.vars

@@ -1,0 +1,30 @@
+# Cloudflare Worker + Durable Object that hosts the whole Chooser game.
+#
+# One Durable Object instance per room (addressed by room code via
+# idFromName) gives the "deterministically route every client in a room to the
+# same instance" property — that instance holds the authoritative game state and
+# every player's WebSocket. The static client is served from ./public via the
+# Workers Static Assets binding. All of this runs on the Cloudflare free tier:
+# the Durable Object is SQLite-backed (see [[migrations]] new_sqlite_classes),
+# which is the free-tier-eligible flavour.
+#
+# Deploy:  npm run deploy   (builds the client into public/, then wrangler deploy)
+
+name = "chooser"
+main = "src/server.ts"
+compatibility_date = "2024-09-23"
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
+# SQLite-backed Durable Objects are available on the Workers free tier (the
+# classic key-value flavour is not), so the whole app stays free to host.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]

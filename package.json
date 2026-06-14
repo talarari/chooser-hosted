@@ -1,0 +1,22 @@
+{
+  "name": "chooser-hosted",
+  "private": true,
+  "type": "module",
+  "description": "Multiplayer finger chooser — server-authoritative, on Cloudflare Workers + Durable Objects",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "test": "node --test test/*.test.ts",
+    "e2e": "node --test test/e2e/play.e2e.test.mjs",
+    "e2e:install": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "esbuild": "^0.24.0",
+    "playwright": "^1.50.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.0.0"
+  }
+}

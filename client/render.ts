@@ -1,0 +1,170 @@
+// Canvas rendering. Receives a view-model from main.ts each frame and draws
+// the finger circles, countdown arcs and winner reveal.
+
+import type { Phase } from '../src/shared/protocol.ts'
+
+export interface RenderFinger {
+  key: string
+  px: number
+  py: number
+  color: string
+  local: boolean
+  bornAt: number
+  group?: number | null
+}
+
+export interface ViewModel {
+  w: number
+  h: number
+  now: number
+  fingers: RenderFinger[]
+  state: Phase
+  progress: number
+  winners: RenderFinger[]
+  pickedAt: number
+}
+
+const RING_RADIUS = 52
+const RING_WIDTH = 9
+
+function easeOutBack(t: number): number {
+  const c = 1.70158
+  return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2)
+}
+
+function clamp01(t: number): number {
+  return t < 0 ? 0 : t > 1 ? 1 : t
+}
+
+function drawFinger(ctx: CanvasRenderingContext2D, f: RenderFinger, now: number, { progress, dim }: { progress: number; dim: number }): void {
+  const born = clamp01((now - f.bornAt) / 250)
+  const scale = easeOutBack(born)
+  const breathe = 1 + 0.03 * Math.sin(now / 250 + f.bornAt)
+  const r = RING_RADIUS * scale * breathe * (f.local ? 1 : 0.8)
+
+  ctx.save()
+  ctx.globalAlpha = (f.local ? 1 : 0.75) * (1 - dim)
+  ctx.translate(f.px, f.py)
+
+  // inner glow disc
+  ctx.beginPath()
+  ctx.arc(0, 0, r * 0.7, 0, Math.PI * 2)
+  ctx.fillStyle = f.color
+  ctx.globalAlpha *= 0.25
+  ctx.fill()
+  ctx.globalAlpha = (f.local ? 1 : 0.75) * (1 - dim)
+
+  // main ring
+  ctx.beginPath()
+  ctx.arc(0, 0, r, 0, Math.PI * 2)
+  ctx.lineWidth = RING_WIDTH
+  ctx.strokeStyle = f.color
+  if (!f.local) ctx.setLineDash([10, 8])
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  // countdown arc filling clockwise from 12 o'clock
+  if (progress > 0) {
+    ctx.beginPath()
+    ctx.arc(0, 0, r + 14, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2)
+    ctx.lineWidth = 4
+    ctx.strokeStyle = '#ffffff'
+    ctx.globalAlpha *= 0.9
+    ctx.stroke()
+  }
+
+  ctx.restore()
+}
+
+function drawWinner(ctx: CanvasRenderingContext2D, f: RenderFinger, now: number, pickedAt: number): void {
+  const t = now - pickedAt
+
+  ctx.save()
+  ctx.translate(f.px, f.py)
+
+  // expanding shockwave rings
+  for (let i = 0; i < 3; i++) {
+    const wave = ((t / 900 + i / 3) % 1)
+    ctx.beginPath()
+    ctx.arc(0, 0, RING_RADIUS + wave * 130, 0, Math.PI * 2)
+    ctx.lineWidth = 3
+    ctx.strokeStyle = f.color
+    ctx.globalAlpha = (1 - wave) * 0.5
+    ctx.stroke()
+  }
+
+  // solid winner disc
+  const pop = easeOutBack(clamp01(t / 350))
+  ctx.globalAlpha = 1
+  ctx.beginPath()
+  ctx.arc(0, 0, RING_RADIUS * 1.25 * pop, 0, Math.PI * 2)
+  ctx.fillStyle = f.color
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(0, 0, (RING_RADIUS * 1.25 + 12) * pop, 0, Math.PI * 2)
+  ctx.lineWidth = RING_WIDTH
+  ctx.strokeStyle = f.color
+  ctx.stroke()
+
+  ctx.restore()
+}
+
+// Groups-mode reveal: every finger lights up in its group color and shows its
+// group number, instead of one finger winning.
+function drawGroupFinger(ctx: CanvasRenderingContext2D, f: RenderFinger, now: number, pickedAt: number): void {
+  const pop = easeOutBack(clamp01((now - pickedAt) / 350))
+  const breathe = 1 + 0.04 * Math.sin(now / 300 + f.bornAt)
+  const r = RING_RADIUS * (f.local ? 1 : 0.8) * pop * breathe
+
+  ctx.save()
+  ctx.translate(f.px, f.py)
+
+  // glow disc
+  ctx.beginPath()
+  ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2)
+  ctx.fillStyle = f.color
+  ctx.globalAlpha = 0.3
+  ctx.fill()
+  ctx.globalAlpha = 1
+
+  // ring
+  ctx.beginPath()
+  ctx.arc(0, 0, r, 0, Math.PI * 2)
+  ctx.lineWidth = RING_WIDTH
+  ctx.strokeStyle = f.color
+  ctx.stroke()
+
+  // group number, so similar palette colors are still tellable apart
+  if (f.group != null) {
+    ctx.fillStyle = f.color
+    ctx.font = `700 ${Math.round(r * 0.7)}px -apple-system, "Segoe UI", system-ui, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(String(f.group + 1), 0, 0)
+  }
+
+  ctx.restore()
+}
+
+export function draw(ctx: CanvasRenderingContext2D, vm: ViewModel): void {
+  const { w, h, now, fingers, state, progress, winners, pickedAt } = vm
+
+  ctx.clearRect(0, 0, w, h)
+
+  if (state === 'picked' && winners && winners.length) {
+    // winners reveal: dim every non-winning finger, then pop each winner
+    const dim = clamp01((now - pickedAt) / 400)
+    const winnerKeys = new Set(winners.map((wf) => wf.key))
+    for (const f of fingers) {
+      if (!winnerKeys.has(f.key)) drawFinger(ctx, f, now, { progress: 0, dim })
+    }
+    for (const wf of winners) drawWinner(ctx, wf, now, pickedAt)
+  } else if (state === 'picked') {
+    // groups reveal — no single winner; color every finger by its group
+    for (const f of fingers) drawGroupFinger(ctx, f, now, pickedAt)
+  } else {
+    for (const f of fingers) {
+      drawFinger(ctx, f, now, { progress: state === 'armed' ? progress : 0, dim: 0 })
+    }
+  }
+}
