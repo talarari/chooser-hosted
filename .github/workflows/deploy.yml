@@ -1,0 +1,58 @@
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      # Real Chromium↔Chromium round over the actual Worker + Durable Object,
+      # booted locally with `wrangler dev` (no Cloudflare account needed).
+      - run: npm run e2e:install
+      - run: npm run e2e
+
+  deploy:
+    needs: [test, e2e]
+    # Validate on PRs, but only publish on pushes to main (or manual dispatch).
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Smoke the live deployment: same e2e suite, pointed at production.
+      - run: npm run e2e:install
+      - run: npm run e2e
+        env:
+          E2E_BASE_URL: https://chooser.talarari.workers.dev
