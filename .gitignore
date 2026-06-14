@@ -6,5 +6,6 @@ public/
 # Local env + secrets (never commit credentials)
 .env
 .env.*
+!.env.example
 .dev.vars
 *.dev.vars

@@ -79,12 +79,16 @@ E2E_BASE_URL=https://chooser.talarari.workers.dev npm run e2e
 ## Deploy
 
 ```sh
-npm run deploy     # builds client into public/, then `wrangler deploy`
+cp .env.example .env   # fill in your Cloudflare API token + account ID
+npm run deploy         # builds client into public/, loads .env, then `wrangler deploy`
 ```
 
-Needs Cloudflare credentials (`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`
-in the environment, or `wrangler login`). CI (`.github/workflows/deploy.yml`)
-runs the unit tests and the local e2e on every push/PR, deploys on pushes to
-`main`, and then smokes the live deployment with the same e2e suite. Add
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets for the
-deploy job.
+`npm run deploy` auto-loads `.env` (gitignored), so deploying from your machine
+needs nothing else — the project stands on its own. (`wrangler login` works too
+if you'd rather not keep a token around.)
+
+CI (`.github/workflows/deploy.yml`) runs the unit tests and the local e2e on
+every push/PR, deploys on pushes to `main`, and then smokes the live deployment
+with the same e2e suite. For the deploy job, add `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` as repository **secrets** (the `.env` is local-only and
+never committed).
