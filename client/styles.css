@@ -141,19 +141,35 @@ button.primary {
 #home-btn:active { transform: scale(0.94); }
 
 #home-btn svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
   display: block;
 }
 
+#home-btn .brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  line-height: 1;
+}
+
 #home-btn .wordmark {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   background: linear-gradient(90deg, #ff3b6b, #ffb820, #27e0a6, #2fb5ff, #a06bff);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+#home-btn .home-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 #room-pill {
