@@ -195,6 +195,13 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 .hud-top #home-btn { justify-self: start; }
 .hud-top #room-pill { justify-self: center; }
 
+/* Device count and name chip share one row to keep the cluster shallow. */
+.hud-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
 /* Circular icon button, used for "back home" in the top-left. */
 #home-btn {
   pointer-events: auto;
