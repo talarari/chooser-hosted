@@ -12,6 +12,7 @@ import {
 import type { Mode, Phase, Fingers, ServerMessage } from '../src/shared/protocol.ts'
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T
+const REVEAL_AFTER_LIFT_LINGER_MS = 2500
 
 const landing = $('#landing')
 const app = $('#app')
@@ -55,6 +56,7 @@ let roomCode: string | null = null
 const localFingers = new Map<number, { x: number; y: number }>() // pointerId -> normalized 0..1
 const peers = new Map<string, Peer>() // peerId -> fingers + name
 const bornAt = new Map<string, number>() // fingerKey -> first-seen timestamp, for pop-in
+const lastFingerFrame = new Map<string, RenderFinger>() // last known position for reveal snapshots
 
 let state: Phase = 'idle' // idle | armed | picked
 let progress = 0
@@ -62,6 +64,7 @@ let tickStep = 0 // countdown milestone: 0=none, 1=start, 2=33%, 3=66%
 let winners: RenderFinger[] = [] // set in 'winners' mode
 let groupAssignment: Map<string, number> | null = null // set in 'groups' mode
 let groupFingers: RenderFinger[] = [] // picked-time snapshot for lingering groups reveal
+let revealEmptySince: number | null = null
 let pickedAt = 0
 
 // Server-driven countdown. The room is the authority on when a pick fires; it
@@ -433,6 +436,7 @@ function collectFingers(now: number): RenderFinger[] {
     } else {
       f.color = colorFor(f.key)
     }
+    lastFingerFrame.set(f.key, { ...f })
   }
   const live = new Set(out.map((f) => f.key))
   for (const key of bornAt.keys()) if (!live.has(key)) bornAt.delete(key)
@@ -444,8 +448,9 @@ function applyGroup({ seed, keys, count }: { seed: number; keys: string[]; count
   const now = performance.now()
   const present = collectFingers(now)
   groupAssignment = assignGroups(keys, seed, count)
+  revealEmptySince = null
   groupFingers = keys.map((key) => {
-    const f = present.find((x) => x.key === key)
+    const f = present.find((x) => x.key === key) ?? lastFingerFrame.get(key)
     const peerId = key.split('/')[0]
     const g = groupAssignment!.get(key)
     return {
@@ -474,8 +479,9 @@ function applyPick({ seed, keys, count }: { seed: number; keys: string[]; count?
   if (won.length === 0) return
   const now = performance.now()
   const present = collectFingers(now)
+  revealEmptySince = null
   winners = won.map((key) => {
-    const f = present.find((x) => x.key === key)
+    const f = present.find((x) => x.key === key) ?? lastFingerFrame.get(key)
     const peerId = key.split('/')[0]
     return {
       key,
@@ -509,6 +515,8 @@ function reset(): void {
   winners = []
   groupAssignment = null
   groupFingers = []
+  revealEmptySince = null
+  lastFingerFrame.clear()
   progress = 0
   tickStep = 0
   bannerEl.hidden = true
@@ -522,8 +530,11 @@ function tick(): void {
 
   if (state === 'picked') {
     const elapsed = now - pickedAt
-    const minReveal = groupFingers.length ? GROUPS_REVEAL_MIN_MS : REVEAL_MIN_MS
-    if ((fingers.length === 0 && elapsed > minReveal) || elapsed > REVEAL_MAX_MS) {
+    if (fingers.length === 0) revealEmptySince ??= now
+    else revealEmptySince = null
+    const revealDone = (revealEmptySince != null && now - revealEmptySince > REVEAL_AFTER_LIFT_LINGER_MS)
+      || elapsed > REVEAL_MAX_MS
+    if (revealDone) {
       reset()
     } else if (winners.length) {
       for (const wf of winners) {
