@@ -170,8 +170,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   touch-action: none;
 }
 
-/* Floating control cluster — three stacked rows, all centered, the logo
-   left-aligned within its own top bar row. */
+/* Floating control cluster — three stacked rows, all centered. */
 #hud {
   position: absolute;
   top: max(0.6rem, env(safe-area-inset-top));
@@ -184,10 +183,12 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   pointer-events: none;
 }
 
-/* Row 1: full-width bar, logo left-aligned, nothing on right. */
+/* Row 1: full-width bar, logo centered. */
 .hud-topbar {
   width: 100%;
   padding: 0 max(0.9rem, env(safe-area-inset-left));
+  display: flex;
+  justify-content: center;
 }
 
 /* Line 3: device status and name together, centered. */
@@ -197,7 +198,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   gap: 0.7rem;
 }
 
-/* The colorful lowercase wordmark — left-aligned in the top bar, taps to go home. */
+/* The colorful lowercase wordmark — centered in the top bar, taps to go home. */
 #home-btn {
   pointer-events: auto;
   padding: 0;
