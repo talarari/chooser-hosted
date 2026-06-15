@@ -202,6 +202,8 @@ renderMode()
 
 $('#new-room').addEventListener('click', () => enterRoom(randomCode()))
 
+$('#leave-room').addEventListener('click', () => leaveRoom())
+
 $<HTMLFormElement>('#join-form').addEventListener('submit', (e) => {
   e.preventDefault()
   const code = normalizeCode($<HTMLInputElement>('#join-code').value)
@@ -234,6 +236,22 @@ function enterRoom(code: string): void {
     onStatus: (status) => { connStatus = status },
     onMessage: handleServerMessage,
   })
+}
+
+// Leave the current room and return to the landing screen so a new room can be
+// started or another joined. Mirrors enterRoom's teardown but drops the socket.
+function leaveRoom(): void {
+  if (net) {
+    try { net.leave() } catch {}
+    net = null
+  }
+  peers.clear()
+  localFingers.clear()
+  reset()
+  roomCode = null
+  location.hash = ''
+  app.hidden = true
+  landing.hidden = false
 }
 
 function handleServerMessage(msg: ServerMessage): void {

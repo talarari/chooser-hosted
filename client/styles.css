@@ -120,6 +120,23 @@ button.primary {
   pointer-events: none;
 }
 
+#hud-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#leave-room {
+  pointer-events: auto;
+  background: rgba(20, 24, 38, 0.8);
+  border: 1px solid #2a3046;
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+}
+
 #room-pill {
   pointer-events: auto;
   display: flex;
