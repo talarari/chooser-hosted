@@ -461,8 +461,21 @@ function applyPhase(phase: Phase, stableSince: number): void {
   // phase === 'picked' is handled by the pick/group message reveal
 }
 
-const hashCode = normalizeCode(location.hash.slice(1))
-if (hashCode) enterRoom(hashCode)
+// Drive room entry/exit from the URL hash so the browser back/forward buttons
+// work: enterRoom/leaveRoom write the hash (creating history entries), and this
+// reconciles the UI when the user navigates that history. Setting the hash to a
+// value it already holds is a no-op, so the calls below don't re-fire this.
+function syncToHash(): void {
+  const code = normalizeCode(location.hash.slice(1))
+  if (code) {
+    if (code !== roomCode) enterRoom(code)
+  } else if (roomCode) {
+    leaveRoom()
+  }
+}
+
+window.addEventListener('hashchange', syncToHash)
+syncToHash()
 
 $('#room-pill').addEventListener('click', async () => {
   const url = `${location.origin}${location.pathname}#${roomCode}`
