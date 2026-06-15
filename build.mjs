@@ -27,9 +27,13 @@ await build({
   target: 'es2022',
 })
 
-for (const file of ['styles.css', 'manifest.json', 'sw.js', 'icon.svg']) {
+for (const file of ['styles.css', 'manifest.json', 'icon.svg']) {
   cpSync(`client/${file}`, `${out}/${file}`)
 }
+
+const sw = readFileSync('client/sw.js', 'utf8').replaceAll('__BUILD_VERSION__', stamp)
+if (sw.includes('__BUILD_VERSION__')) throw new Error('service worker stamping failed')
+writeFileSync(`${out}/sw.js`, sw)
 
 const html = readFileSync('client/index.html', 'utf8')
   .replace('src="app.js"', `src="app.js?v=${stamp}"`)

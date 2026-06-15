@@ -49,7 +49,8 @@ export function colorFor(key: string): string {
 
 export function peerName(peerId: string): string {
   const h = hashStr(peerId)
-  return `${ADJECTIVES[h % ADJECTIVES.length]} ${ANIMALS[(h >>> 8) % ANIMALS.length]}`
+  const suffix = ((h >>> 16) % 1296).toString(36).padStart(2, '0').toUpperCase()
+  return `${ADJECTIVES[h % ADJECTIVES.length]} ${ANIMALS[(h >>> 8) % ANIMALS.length]}${suffix}`
 }
 
 export function sanitizeName(raw: string | null | undefined): string | null {

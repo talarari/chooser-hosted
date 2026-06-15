@@ -1,4 +1,4 @@
-const CACHE = 'chooser-v1'
+const CACHE = 'chooser-__BUILD_VERSION__'
 
 self.addEventListener('install', () => self.skipWaiting())
 
