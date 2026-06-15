@@ -202,7 +202,7 @@ renderMode()
 
 $('#new-room').addEventListener('click', () => enterRoom(randomCode()))
 
-$('#leave-room').addEventListener('click', () => leaveRoom())
+$('#home-btn').addEventListener('click', () => leaveRoom())
 
 $<HTMLFormElement>('#join-form').addEventListener('submit', (e) => {
   e.preventDefault()

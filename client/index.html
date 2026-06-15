@@ -31,14 +31,19 @@
 
   <div id="app" hidden>
     <canvas id="stage"></canvas>
+    <button id="home-btn" title="Leave room — back to home">
+      <svg viewBox="0 0 512 512" aria-hidden="true">
+        <circle cx="256" cy="256" r="160" fill="none" stroke="#2fb5ff" stroke-width="26" opacity="0.25"/>
+        <circle cx="256" cy="256" r="110" fill="none" stroke="#2fb5ff" stroke-width="26" opacity="0.55"/>
+        <circle cx="256" cy="256" r="56" fill="#2fb5ff"/>
+      </svg>
+      <span class="wordmark">Chooser</span>
+    </button>
     <header id="hud">
-      <div id="hud-top">
-        <button id="leave-room" title="Leave room">‹ Home</button>
-        <button id="room-pill" title="Copy invite link">
-          <span id="room-code"></span>
-          <span id="copy-state">⧉</span>
-        </button>
-      </div>
+      <button id="room-pill" title="Copy invite link">
+        <span id="room-code"></span>
+        <span id="copy-state">⧉</span>
+      </button>
       <button id="name-pill" class="name-chip" title="Change your name"></button>
       <span id="peer-count"></span>
       <div id="mode-bar">
