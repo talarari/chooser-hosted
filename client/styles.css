@@ -135,7 +135,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   color: var(--fg);
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 0.8rem 0.4rem 0.8rem 0.7rem;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -144,7 +144,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 #join-code::placeholder { color: var(--muted); letter-spacing: 0.3em; }
 #join-code:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47, 181, 255, 0.18); }
 
-.join-btn { flex: none; font-weight: 600; }
+.join-btn { flex: none; border-radius: 8px; font-weight: 600; }
 .join-btn:active { transform: scale(0.97); }
 
 #install-bar { margin-top: -0.2rem; }
@@ -285,8 +285,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   flex: 1;
   max-width: none;
   text-align: center;
-  font-size: 0.95rem;
-  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.1rem;
 }
 
 #peer-count {
