@@ -155,19 +155,17 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   bottom: max(2.5rem, calc(env(safe-area-inset-bottom) + 1.2rem));
   left: 50%;
   transform: translateX(-50%);
-  width: min(330px, 84vw);
 }
 
 #install-btn {
-  width: 100%;
   background: transparent;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.8rem 1.6rem;
+  font-size: 0.85rem;
+  padding: 0.45rem 1.2rem;
   border-radius: 8px;
   transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
 #install-btn:hover { background: rgba(47, 181, 255, 0.08); }
