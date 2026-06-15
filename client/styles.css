@@ -298,7 +298,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   padding: 0.8rem 1.1rem;
 }
 
-/* In-place name editing */
+/* In-place name editing (landing page only) */
 .name-edit-wrap { display: contents; }
 
 .name-edit-wrap .name-input {
@@ -319,12 +319,6 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 .name-edit-wrap.editing .name-chip { display: none; }
 .name-edit-wrap.editing .name-input { display: block; }
 
-/* HUD pill input: same size constraints as the pill button */
-#name-pill-wrap .name-input {
-  max-width: 38vw;
-  min-width: 8ch;
-}
-
 /* Landing input matches the landing chip layout */
 #name-landing-wrap .name-input {
   width: 100%;
@@ -335,6 +329,114 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   padding: 0.8rem 1.1rem;
   box-sizing: border-box;
 }
+
+/* Custom name dialog (bottom sheet, shown from game HUD) */
+#name-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+#name-dialog[hidden] { display: none; }
+
+#name-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+#name-dialog-sheet {
+  position: relative;
+  width: 100%;
+  background: #1a1f30;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#name-dialog:not([hidden]) #name-dialog-sheet {
+  animation: name-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes name-sheet-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+#name-dialog-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  margin: 0 auto 2px;
+  flex-shrink: 0;
+}
+
+#name-dialog-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+#name-dialog-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  color: var(--fg);
+  font-size: 1.15rem;
+  font-family: inherit;
+  padding: 14px 16px;
+  outline: none;
+  box-sizing: border-box;
+  caret-color: var(--accent);
+}
+
+#name-dialog-input:focus {
+  box-shadow: 0 0 0 3px rgba(47, 181, 255, 0.15);
+}
+
+#name-dialog-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#name-dialog-cancel {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 14px;
+  cursor: pointer;
+}
+
+#name-dialog-cancel:active { background: rgba(255, 255, 255, 0.12); }
+
+#name-dialog-save {
+  flex: 2;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: #001825;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 14px;
+  cursor: pointer;
+}
+
+#name-dialog-save:active { filter: brightness(0.88); }
 
 #peer-count {
   display: flex;

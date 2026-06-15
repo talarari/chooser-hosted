@@ -66,10 +66,7 @@
       </button>
       <div class="hud-meta">
         <span id="peer-count"></span>
-        <div class="name-edit-wrap" id="name-pill-wrap">
-          <button id="name-pill" class="name-chip" title="Change your name"></button>
-          <input class="name-input" type="text" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" />
-        </div>
+        <button id="name-pill" class="name-chip" title="Change your name"></button>
       </div>
     </header>
     <div id="banner" hidden></div>
@@ -83,6 +80,19 @@
         </div>
       </div>
       <p id="tip">Touch and hold with at least two fingers — across any devices in the room</p>
+    </div>
+  </div>
+
+  <div id="name-dialog" hidden role="dialog" aria-modal="true" aria-label="Edit your name">
+    <div id="name-dialog-backdrop"></div>
+    <div id="name-dialog-sheet">
+      <div id="name-dialog-handle"></div>
+      <p id="name-dialog-label">Your name</p>
+      <input id="name-dialog-input" type="text" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" />
+      <div id="name-dialog-actions">
+        <button id="name-dialog-cancel" type="button">Cancel</button>
+        <button id="name-dialog-save" type="button">Save</button>
+      </div>
     </div>
   </div>
 

@@ -127,10 +127,7 @@ function nameOf(peerId: string): string {
   return peers.get(peerId)?.name ?? peerName(peerId)
 }
 
-function commitNameEdit(input: HTMLInputElement): void {
-  const wrap = input.closest('.name-edit-wrap') as HTMLElement
-  wrap.classList.remove('editing')
-  const next = sanitizeName(input.value)
+function applyName(next: string | null): void {
   if (!next || next === myName) return
   myName = next
   try { localStorage.setItem('chooser:name', myName) } catch {}
@@ -138,12 +135,16 @@ function commitNameEdit(input: HTMLInputElement): void {
   net?.sendName(displayName())
 }
 
-for (const el of nameEls) {
-  const wrap = el.closest('.name-edit-wrap') as HTMLElement
+// Landing page: in-place editing inside the name field
+{
+  const landingEl = $('#name-landing')
+  const wrap = landingEl.closest('.name-edit-wrap') as HTMLElement
   const input = wrap.querySelector('.name-input') as HTMLInputElement
   let canceling = false
 
-  el.addEventListener('click', () => {
+  const commit = (): void => { wrap.classList.remove('editing'); applyName(sanitizeName(input.value)) }
+
+  landingEl.addEventListener('click', () => {
     canceling = false
     input.value = displayName()
     wrap.classList.add('editing')
@@ -152,17 +153,41 @@ for (const el of nameEls) {
   })
 
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); commitNameEdit(input) }
+    if (e.key === 'Enter') { e.preventDefault(); commit() }
     else if (e.key === 'Escape') { e.preventDefault(); canceling = true; wrap.classList.remove('editing') }
   })
 
-  // blur fires after display:none (e.g. after Enter or Escape) — guard against
-  // Escape committing the edit, and against double-commit on Enter.
+  // blur fires after display:none — guard against Escape re-committing
   input.addEventListener('blur', () => {
     if (canceling) { canceling = false; return }
-    commitNameEdit(input)
+    commit()
   })
 }
+
+// HUD pill: custom bottom-sheet dialog
+const nameDialogEl = $('#name-dialog')
+const nameDialogInput = $<HTMLInputElement>('#name-dialog-input')
+
+function openNameDialog(): void {
+  nameDialogInput.value = displayName()
+  nameDialogEl.hidden = false
+  nameDialogInput.select()
+  nameDialogInput.focus()
+}
+
+function closeNameDialog(save: boolean): void {
+  nameDialogEl.hidden = true
+  if (save) applyName(sanitizeName(nameDialogInput.value))
+}
+
+$('#name-pill').addEventListener('click', openNameDialog)
+$('#name-dialog-backdrop').addEventListener('click', () => closeNameDialog(false))
+$('#name-dialog-cancel').addEventListener('click', () => closeNameDialog(false))
+$('#name-dialog-save').addEventListener('click', () => closeNameDialog(true))
+nameDialogInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); closeNameDialog(true) }
+  else if (e.key === 'Escape') { e.preventDefault(); closeNameDialog(false) }
+})
 
 function ensurePeer(peerId: string): Peer {
   let peer = peers.get(peerId)
