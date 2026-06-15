@@ -17,6 +17,16 @@ async function press(page, id, fx, fy) {
   }, { id, fx, fy })
 }
 
+async function release(page, id, fx, fy) {
+  await page.evaluate(({ id, fx, fy }) => {
+    const c = document.querySelector('#stage')
+    c.dispatchEvent(new PointerEvent('pointerup', {
+      pointerId: id, clientX: fx * c.clientWidth, clientY: fy * c.clientHeight,
+      bubbles: true, cancelable: true,
+    }))
+  }, { id, fx, fy })
+}
+
 const hasPeers = (page) => page.waitForFunction(
   () => document.querySelector('#peer-count')?.textContent.includes('2 device'),
   null, { timeout: 30000 })
@@ -31,6 +41,23 @@ const canvasHasInk = (page) => page.waitForFunction(() => {
   for (let i = 3; i < data.length; i += 4) if (data[i] !== 0) return true
   return false
 }, null, { timeout: 20000 })
+
+async function maxCanvasAlphaAt(page, fx, fy) {
+  return page.evaluate(({ fx, fy }) => {
+    const c = document.querySelector('#stage')
+    const x = Math.max(0, Math.min(c.width - 1, Math.round(fx * c.width)))
+    const y = Math.max(0, Math.min(c.height - 1, Math.round(fy * c.height)))
+    const r = Math.max(8, Math.round(14 * (window.devicePixelRatio || 1)))
+    const sx = Math.max(0, x - r)
+    const sy = Math.max(0, y - r)
+    const sw = Math.min(c.width - sx, r * 2 + 1)
+    const sh = Math.min(c.height - sy, r * 2 + 1)
+    const { data } = c.getContext('2d').getImageData(sx, sy, sw, sh)
+    let max = 0
+    for (let i = 3; i < data.length; i += 4) max = Math.max(max, data[i])
+    return max
+  }, { fx, fy })
+}
 
 describe('Chooser hosted — two players in a room', () => {
   // A unique room per run so a re-run never collides with a lingering DO.
@@ -85,6 +112,54 @@ describe('Chooser hosted — two players in a room', () => {
     const [winPage, loserBanner] = ba.includes('You were chosen') ? [A, bb] : [B, ba]
     const winName = (await winPage.textContent('#name-pill')).trim()
     assert.equal(loserBanner.trim(), `${winName} was chosen`)
+  })
+
+  test('winner circle lingers after fingers lift and clears with banner', async () => {
+    const [p1, p2] = await openPair()
+    await press(p1, 1, 0.35, 0.45)
+    await press(p2, 1, 0.65, 0.55)
+
+    await Promise.all([bannerShown(p1), bannerShown(p2)])
+    const [b1, b2] = await Promise.all([p1.textContent('#banner'), p2.textContent('#banner')])
+    const winPage = b1.includes('You were chosen') ? p1 : p2
+    const [winX, winY] = winPage === p1 ? [0.35, 0.45] : [0.65, 0.55]
+
+    await release(p1, 1, 0.35, 0.45)
+    await release(p2, 1, 0.65, 0.55)
+    await winPage.waitForTimeout(500)
+
+    assert.equal(await winPage.locator('#banner').isVisible(), true, 'winner banner should still be visible after lift')
+    assert.ok(await maxCanvasAlphaAt(winPage, winX, winY) > 0, 'winner circle should still be drawn after lift')
+
+    await winPage.waitForFunction(() => document.querySelector('#banner').hidden, null, { timeout: 5000 })
+    assert.equal(await maxCanvasAlphaAt(winPage, winX, winY), 0, 'winner circle should clear with the banner')
+    await closeAll(p1, p2)
+  })
+
+  test('group circles linger after lifted fingers and clear with banner', async () => {
+    const [p1, p2] = await openPair()
+    await p1.getByRole('button', { name: 'Winners' }).click()
+    await p2.waitForFunction(() => document.querySelector('#mode-toggle')?.textContent === 'Groups')
+
+    await press(p1, 1, 0.3, 0.45)
+    await press(p1, 2, 0.55, 0.45)
+    await press(p2, 1, 0.7, 0.55)
+
+    await Promise.all([bannerShown(p1), bannerShown(p2)])
+    await release(p1, 1, 0.3, 0.45)
+    await p1.waitForTimeout(500)
+
+    assert.equal(await p1.locator('#banner').isVisible(), true, 'group banner should still be visible after partial lift')
+    assert.ok(await maxCanvasAlphaAt(p1, 0.3, 0.45) > 0, 'released group circle should still be drawn')
+
+    await release(p1, 2, 0.55, 0.45)
+    await release(p2, 1, 0.7, 0.55)
+    await p1.waitForTimeout(500)
+    assert.ok(await maxCanvasAlphaAt(p1, 0.3, 0.45) > 0, 'group circle should still be drawn after all fingers lift')
+
+    await p1.waitForFunction(() => document.querySelector('#banner').hidden, null, { timeout: 5000 })
+    assert.equal(await maxCanvasAlphaAt(p1, 0.3, 0.45), 0, 'group circle should clear with the banner')
+    await closeAll(p1, p2)
   })
 
   test('players who never chose a name get distinct defaults', async () => {

@@ -306,7 +306,10 @@ function handleServerMessage(msg: ServerMessage): void {
 function applyPhase(phase: Phase, stableSince: number): void {
   if (phase === 'armed') {
     const minReveal = groupFingers.length ? GROUPS_REVEAL_MIN_MS : REVEAL_MIN_MS
-    if (state === 'picked' && serverNow() - (pickedAt + clockOffset) < minReveal) return
+    if (state === 'picked') {
+      if (performance.now() - pickedAt < minReveal) return
+      reset()
+    }
     if (state !== 'armed' || stableSince !== armedStableSince) {
       armedStableSince = stableSince
       tickStep = 0
