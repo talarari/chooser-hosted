@@ -78,7 +78,7 @@ html, body {
 .tagline { color: var(--muted); margin: 0; line-height: 1.5; font-size: 0.95rem; }
 
 /* shared sizing for the stacked landing controls so edges line up */
-.primary, .or-divider, #join-form { width: min(330px, 84vw); }
+.primary, .or-divider, #join-form, .name-field { width: min(330px, 84vw); }
 
 button {
   font: inherit;
@@ -282,9 +282,11 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 #landing .name-chip {
+  flex: 1;
   max-width: none;
+  text-align: center;
   font-size: 0.95rem;
-  padding: 0.5rem 1.1rem;
+  padding: 0.6rem 1.1rem;
 }
 
 #peer-count {
