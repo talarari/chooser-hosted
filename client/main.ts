@@ -22,6 +22,7 @@ const roomCodeEl = $('#room-code')
 const nameEls = [$('#name-pill'), $('#name-landing')]
 const copyStateEl = $('#copy-state')
 const peerCountEl = $('#peer-count')
+const peerListEl = $('#peer-list')
 const bannerEl = $('#banner')
 const tipEl = $('#tip')
 const errEl = $('#err')
@@ -73,6 +74,7 @@ let pickedAt = 0
 let armedStableSince = 0
 let clockOffset = 0 // serverNow - Date.now()
 let connStatus: ConnStatus = 'connecting'
+let peerListOpen = false // connected-devices popover visibility
 
 // Selection mode, shared across the room. Mirrors the original: 'winners' picks
 // `winnerCount` fingers, 'groups' divides everyone into `groupCount` colored
@@ -110,6 +112,14 @@ try {
   if (!clientId) { clientId = randomId(); localStorage.setItem('chooser:cid', clientId) }
 } catch { clientId = randomId() }
 
+// A per-page-session id the server uses to recognize a *reconnect* from this
+// same page (after a silent socket death — common on mobile) and evict the dead
+// socket immediately, instead of letting it linger ~20s as a ghost that inflates
+// the device count. Deliberately in-memory and NOT the persisted clientId: two
+// tabs of one browser share localStorage, so a shared id would make them fight
+// over it (each reconnect evicting the other). Per page, they stay distinct.
+const sessionId = randomId()
+
 function selfId(): string {
   return net?.selfId ?? 'me'
 }
@@ -120,6 +130,7 @@ function displayName(): string {
 
 function renderName(): void {
   for (const el of nameEls) el.textContent = displayName()
+  renderPeerList()
 }
 renderName()
 
@@ -212,6 +223,60 @@ function ensurePeer(peerId: string): Peer {
   return peer
 }
 
+// ---- connected-devices popover ----
+
+// Tapping the device count opens a small list of everyone in the room (this
+// device first, then each peer). Built fresh on open and kept in sync while
+// open as peers join, leave or rename. (State declared up with the rest.)
+
+function deviceRow(id: string, label: string, isSelf: boolean): HTMLElement {
+  const row = document.createElement('div')
+  row.className = 'peer-list-item'
+  row.setAttribute('role', 'menuitem')
+
+  const dot = document.createElement('span')
+  dot.className = 'peer-dot'
+  dot.style.background = colorFor(id)
+
+  const text = document.createElement('span')
+  text.className = 'peer-name'
+  text.textContent = label
+
+  row.append(dot, text)
+  if (isSelf) {
+    const you = document.createElement('span')
+    you.className = 'peer-you'
+    you.textContent = 'you'
+    row.append(you)
+  }
+  return row
+}
+
+function renderPeerList(): void {
+  if (!peerListOpen) return
+  peerListEl.replaceChildren(deviceRow(selfId(), displayName(), true))
+  for (const peerId of peers.keys()) {
+    peerListEl.append(deviceRow(peerId, nameOf(peerId), false))
+  }
+}
+
+function setPeerList(open: boolean): void {
+  peerListOpen = open
+  peerListEl.hidden = !open
+  peerCountEl.setAttribute('aria-expanded', String(open))
+  if (open) renderPeerList()
+}
+
+peerCountEl.addEventListener('click', (e) => {
+  e.stopPropagation()
+  setPeerList(!peerListOpen)
+})
+
+// Dismiss on any tap outside the popover (and on its own toggle, handled above).
+document.addEventListener('click', (e) => {
+  if (peerListOpen && !peerListEl.contains(e.target as Node)) setPeerList(false)
+})
+
 // ---- selection mode ----
 
 function renderMode(): void {
@@ -300,10 +365,12 @@ function enterRoom(code: string): void {
     requestAnimationFrame(tick)
   }
 
-  net = connect(code, () => displayName(), {
+  net = connect(code, () => displayName(), sessionId, {
     onStatus: (status) => { connStatus = status },
     onMessage: handleServerMessage,
   })
+  // Test seam: lets the e2e drive a reconnect (it can't kill the socket directly).
+  ;(window as unknown as { __net?: Net }).__net = net
 }
 
 // Leave the current room and return to the landing screen so a new room can be
@@ -316,6 +383,7 @@ function leaveRoom(): void {
   peers.clear()
   localFingers.clear()
   reset()
+  setPeerList(false)
   roomCode = null
   location.hash = ''
   app.hidden = true
@@ -363,6 +431,10 @@ function handleServerMessage(msg: ServerMessage): void {
     case 'group':
       applyGroup(msg)
       break
+  }
+  // Membership/name changes are reflected live if the device list is open.
+  if (peerListOpen && (msg.t === 'welcome' || msg.t === 'peerJoin' || msg.t === 'peerLeave' || msg.t === 'name')) {
+    renderPeerList()
   }
 }
 

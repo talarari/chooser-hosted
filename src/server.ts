@@ -40,6 +40,12 @@ export class Room implements DurableObject {
   private room: RoomState
   private sockets = new Map<string, WebSocket>()
   private lastSeen = new Map<string, number>()
+  // Per-page-session id (sent by the client) <-> its current socket id. A page
+  // that silently lost its socket reconnects with the *same* cid, so we can evict
+  // its previous socket the instant the new one arrives instead of waiting ~20s
+  // for the reaper — which is what made one phone show up as several "devices".
+  private cidById = new Map<string, string>()
+  private idByCid = new Map<string, string>()
   private reaper: ReturnType<typeof setInterval> | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
 
@@ -85,7 +91,21 @@ export class Room implements DurableObject {
     const client = pair[0]
     const server = pair[1]
     const id = crypto.randomUUID().slice(0, 8)
-    const name = new URL(request.url).searchParams.get('name')
+    const url = new URL(request.url)
+    const name = url.searchParams.get('name')
+    const cid = url.searchParams.get('cid')
+
+    // Same page reconnecting? Evict its stale socket now so it doesn't linger as
+    // a ghost peer inflating the device count.
+    if (cid) {
+      const prev = this.idByCid.get(cid)
+      if (prev) {
+        try { this.sockets.get(prev)?.close(1001, 'superseded') } catch {}
+        this.drop(prev)
+      }
+      this.cidById.set(id, cid)
+      this.idByCid.set(cid, id)
+    }
 
     server.accept()
     this.sockets.set(id, server)
@@ -113,6 +133,13 @@ export class Room implements DurableObject {
 
   private drop(id: string): void {
     this.lastSeen.delete(id)
+    const cid = this.cidById.get(id)
+    if (cid !== undefined) {
+      this.cidById.delete(id)
+      // Only clear the reverse entry if it still points at this socket — a newer
+      // socket from the same device may have already claimed the cid.
+      if (this.idByCid.get(cid) === id) this.idByCid.delete(cid)
+    }
     if (this.sockets.delete(id)) this.room.leave(id)
     if (this.sockets.size === 0) this.stopReaper()
   }
