@@ -127,15 +127,34 @@ function nameOf(peerId: string): string {
   return peers.get(peerId)?.name ?? peerName(peerId)
 }
 
+function commitNameEdit(input: HTMLInputElement): void {
+  const wrap = input.closest('.name-edit-wrap') as HTMLElement
+  wrap.classList.remove('editing')
+  const next = sanitizeName(input.value)
+  if (!next || next === myName) return
+  myName = next
+  try { localStorage.setItem('chooser:name', myName) } catch {}
+  renderName()
+  net?.sendName(displayName())
+}
+
 for (const el of nameEls) {
+  const wrap = el.closest('.name-edit-wrap') as HTMLElement
+  const input = wrap.querySelector('.name-input') as HTMLInputElement
+
   el.addEventListener('click', () => {
-    const next = sanitizeName(prompt('Your name', displayName()))
-    if (!next || next === myName) return
-    myName = next
-    try { localStorage.setItem('chooser:name', myName) } catch {}
-    renderName()
-    net?.sendName(displayName())
+    input.value = displayName()
+    wrap.classList.add('editing')
+    input.select()
+    input.focus()
   })
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commitNameEdit(input) }
+    else if (e.key === 'Escape') { e.preventDefault(); wrap.classList.remove('editing') }
+  })
+
+  input.addEventListener('blur', () => commitNameEdit(input))
 }
 
 function ensurePeer(peerId: string): Peer {

@@ -298,6 +298,44 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   padding: 0.8rem 1.1rem;
 }
 
+/* In-place name editing */
+.name-edit-wrap { display: contents; }
+
+.name-edit-wrap .name-input {
+  display: none;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 0.35rem 0.75rem;
+  max-width: 10ch;
+  backdrop-filter: blur(8px);
+  outline: none;
+  min-width: 0;
+}
+
+.name-edit-wrap.editing .name-chip { display: none; }
+.name-edit-wrap.editing .name-input { display: block; }
+
+/* HUD pill input: same size constraints as the pill button */
+#name-pill-wrap .name-input {
+  max-width: 38vw;
+  min-width: 8ch;
+}
+
+/* Landing input matches the landing chip layout */
+#name-landing-wrap .name-input {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.1rem;
+  box-sizing: border-box;
+}
+
 #peer-count {
   display: flex;
   align-items: center;

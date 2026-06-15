@@ -43,7 +43,10 @@
     </form>
     <div class="name-field">
       <span class="name-field-label">Your name</span>
-      <button id="name-landing" class="name-chip" title="Tap to change your name"></button>
+      <div class="name-edit-wrap" id="name-landing-wrap">
+        <button id="name-landing" class="name-chip" title="Tap to change your name"></button>
+        <input class="name-input" type="text" maxlength="20" autocomplete="off" spellcheck="false" enterkeyhint="done" />
+      </div>
     </div>
     <div id="install-bar" hidden>
       <button id="install-btn">Add to home screen</button>
@@ -63,7 +66,10 @@
       </button>
       <div class="hud-meta">
         <span id="peer-count"></span>
-        <button id="name-pill" class="name-chip" title="Change your name"></button>
+        <div class="name-edit-wrap" id="name-pill-wrap">
+          <button id="name-pill" class="name-chip" title="Change your name"></button>
+          <input class="name-input" type="text" maxlength="20" autocomplete="off" spellcheck="false" enterkeyhint="done" />
+        </div>
       </div>
     </header>
     <div id="banner" hidden></div>
