@@ -193,15 +193,8 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 .hud-top #home-btn { justify-self: start; }
-.hud-top #room-pill { justify-self: center; }
+.hud-top #peer-count { justify-self: center; }
 .hud-top .name-chip { justify-self: end; }
-
-/* Row 2: connection/device status next to the mode pill. */
-.hud-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
 
 /* The colorful lowercase wordmark doubles as the "back home" button. */
 #home-btn {
@@ -224,8 +217,10 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 #home-btn:hover { opacity: 0.85; }
 #home-btn:active { transform: scale(0.94); }
 
+/* Room code is the standalone focal point on its own line. */
 #room-pill {
   pointer-events: auto;
+  margin-top: 0.1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -248,9 +243,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 #room-code {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
 }
 
 #copy-state { color: var(--muted); font-size: 0.85rem; font-weight: 400; }
@@ -272,8 +267,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 .name-chip::after { content: ' ✎'; opacity: 0.5; }
 
-/* The room's name chip sits centered under the room code — show it in full. */
-#name-pill { max-width: none; }
+/* Corner name chip: roomy enough for typical names, capped so a very long one
+   can't crowd the bar. */
+#name-pill { max-width: 38vw; }
 
 /* On the landing the name is a clearly-labeled, tappable field. */
 .name-field {
@@ -320,6 +316,20 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 #peer-count[data-status="connecting"]::before { background: #ffb820; box-shadow: 0 0 8px rgba(255, 184, 32, 0.9); }
 #peer-count[data-status="closed"]::before { background: #ff3b6b; box-shadow: 0 0 8px rgba(255, 59, 107, 0.9); }
+
+/* Bottom control bar: the mode pill plus the play hint, kept clear of the
+   finger surface up top. */
+#bottom-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(1.4rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  pointer-events: none;
+}
 
 /* Mode controls: pick N winners vs divide everyone into N groups — bundled into
    a single outlined pill with an inline stepper. */
@@ -383,10 +393,8 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 #tip {
-  position: absolute;
-  bottom: max(1.5rem, env(safe-area-inset-bottom));
-  left: 0;
-  right: 0;
+  margin: 0;
+  max-width: 32rem;
   text-align: center;
   color: var(--muted);
   font-size: 0.9rem;

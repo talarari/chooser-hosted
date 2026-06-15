@@ -55,27 +55,27 @@
     <header id="hud">
       <div class="hud-top">
         <button id="home-btn" title="Back to home" aria-label="Back to home">chooser</button>
-        <button id="room-pill" title="Copy invite link">
-          <span class="pill-label">Room</span>
-          <span id="room-code"></span>
-          <span id="copy-state">⧉</span>
-        </button>
+        <span id="peer-count"></span>
         <button id="name-pill" class="name-chip" title="Change your name"></button>
       </div>
-      <div class="hud-meta">
-        <span id="peer-count"></span>
-        <div id="mode-bar">
-          <button id="mode-toggle" class="mode-chip" title="Switch between picking winners and dividing fingers into groups">Winners</button>
-          <div id="count-stepper">
-            <button id="count-dec" class="step-btn" aria-label="Fewer">−</button>
-            <span id="count-label">1 winner</span>
-            <button id="count-inc" class="step-btn" aria-label="More">+</button>
-          </div>
-        </div>
-      </div>
+      <button id="room-pill" title="Copy invite link">
+        <span class="pill-label">Room</span>
+        <span id="room-code"></span>
+        <span id="copy-state">⧉</span>
+      </button>
     </header>
     <div id="banner" hidden></div>
-    <p id="tip">Touch and hold with at least two fingers — across any devices in the room</p>
+    <div id="bottom-bar">
+      <div id="mode-bar">
+        <button id="mode-toggle" class="mode-chip" title="Switch between picking winners and dividing fingers into groups">Winners</button>
+        <div id="count-stepper">
+          <button id="count-dec" class="step-btn" aria-label="Fewer">−</button>
+          <span id="count-label">1 winner</span>
+          <button id="count-inc" class="step-btn" aria-label="More">+</button>
+        </div>
+      </div>
+      <p id="tip">Touch and hold with at least two fingers — across any devices in the room</p>
+    </div>
   </div>
 
   <div id="err" hidden></div>
