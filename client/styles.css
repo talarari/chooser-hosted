@@ -194,8 +194,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 .hud-top #home-btn { justify-self: start; }
 .hud-top #room-pill { justify-self: center; }
+.hud-top .name-chip { justify-self: end; }
 
-/* Device count and name chip share one row to keep the cluster shallow. */
+/* Row 2: connection/device status next to the mode pill. */
 .hud-meta {
   display: flex;
   align-items: center;
