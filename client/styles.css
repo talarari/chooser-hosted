@@ -170,8 +170,8 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   touch-action: none;
 }
 
-/* Floating control cluster — kept compact and pinned to the top so the rest of
-   the screen is clear surface for fingers. */
+/* Floating control cluster — the chooser logo is pinned top-left; the room
+   code and meta row stack centered below it. */
 #hud {
   position: absolute;
   top: max(0.7rem, env(safe-area-inset-top));
@@ -180,35 +180,29 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0 max(0.7rem, env(safe-area-inset-left));
+  gap: 0.5rem;
+  padding-top: 0.1rem;
   pointer-events: none;
 }
 
-.hud-top {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-}
-
-.hud-top #home-btn { justify-self: start; }
-.hud-top #room-pill { justify-self: center; }
-
-/* Line below the room code: device status and your name, together. */
+/* Line below the room code: device status and your name together, centered. */
 .hud-meta {
   display: flex;
   align-items: center;
   gap: 0.7rem;
 }
 
-/* The colorful lowercase wordmark doubles as the "back home" button. */
+/* The colorful lowercase wordmark doubles as the "back home" button —
+   pinned absolutely to the top-left so it never disrupts center alignment. */
 #home-btn {
   pointer-events: auto;
-  padding: 0.2rem 0.1rem;
+  position: absolute;
+  top: max(0.7rem, env(safe-area-inset-top));
+  left: max(0.85rem, env(safe-area-inset-left));
+  padding: 0.2rem 0;
   background: none;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   background-image: var(--brand);
