@@ -120,21 +120,40 @@ button.primary {
   pointer-events: none;
 }
 
-#hud-top {
+/* Brand mark in the top-left corner that doubles as the way back home. */
+#home-btn {
+  position: absolute;
+  top: max(0.8rem, env(safe-area-inset-top));
+  left: max(0.8rem, env(safe-area-inset-left));
+  z-index: 2;
+  pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-#leave-room {
-  pointer-events: auto;
+  gap: 0.45rem;
   background: rgba(20, 24, 38, 0.8);
   border: 1px solid #2a3046;
   border-radius: 999px;
-  color: var(--fg);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.4rem 0.8rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.5rem;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+#home-btn:hover { border-color: #3a4264; }
+#home-btn:active { transform: scale(0.94); }
+
+#home-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+
+#home-btn .wordmark {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #ff3b6b, #ffb820, #27e0a6, #2fb5ff, #a06bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 #room-pill {
