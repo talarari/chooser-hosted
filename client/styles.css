@@ -78,7 +78,7 @@ html, body {
 .tagline { color: var(--muted); margin: 0; line-height: 1.5; font-size: 0.95rem; }
 
 /* shared sizing for the stacked landing controls so edges line up */
-.primary, .or-divider, #join-form, .info-card { width: min(330px, 84vw); }
+.primary, .or-divider, #join-form { width: min(330px, 84vw); }
 
 button {
   font: inherit;
@@ -146,23 +146,6 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 .join-btn { flex: none; font-weight: 600; }
 .join-btn:active { transform: scale(0.97); }
-
-.info-card {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.3rem;
-  padding: 0.7rem 0.9rem;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 14px;
-  color: var(--muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
-  text-align: left;
-}
-
-.info-card svg { flex: none; width: 18px; height: 18px; opacity: 0.65; }
 
 #install-bar { margin-top: -0.2rem; }
 
