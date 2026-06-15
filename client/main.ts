@@ -4,7 +4,7 @@ import { draw } from './render.ts'
 import type { RenderFinger } from './render.ts'
 import { playCountdownTick, playWinnerReveal, playGroupReveal } from './audio.ts'
 import {
-  MIN_FINGERS, HOLD_MS, REVEAL_MIN_MS, REVEAL_MAX_MS,
+  MIN_FINGERS, HOLD_MS, REVEAL_MIN_MS, GROUPS_REVEAL_MIN_MS, REVEAL_MAX_MS,
   MIN_GROUPS, MAX_GROUPS, MIN_WINNERS, MAX_WINNERS, NEUTRAL_COLOR,
   fingerKey, colorFor, peerName, sanitizeName, pickWinners, assignGroups, groupColor,
   randomCode, normalizeCode,
@@ -284,7 +284,8 @@ function handleServerMessage(msg: ServerMessage): void {
 // the 'picked' reveal locally so it lingers exactly as before (REVEAL_MIN/MAX).
 function applyPhase(phase: Phase, stableSince: number): void {
   if (phase === 'armed') {
-    if (state === 'picked' && serverNow() - (pickedAt + clockOffset) < REVEAL_MIN_MS) return
+    const minReveal = groupFingers.length ? GROUPS_REVEAL_MIN_MS : REVEAL_MIN_MS
+    if (state === 'picked' && serverNow() - (pickedAt + clockOffset) < minReveal) return
     if (state !== 'armed' || stableSince !== armedStableSince) {
       armedStableSince = stableSince
       tickStep = 0
@@ -503,7 +504,8 @@ function tick(): void {
 
   if (state === 'picked') {
     const elapsed = now - pickedAt
-    if ((fingers.length === 0 && elapsed > REVEAL_MIN_MS) || elapsed > REVEAL_MAX_MS) {
+    const minReveal = groupFingers.length ? GROUPS_REVEAL_MIN_MS : REVEAL_MIN_MS
+    if ((fingers.length === 0 && elapsed > minReveal) || elapsed > REVEAL_MAX_MS) {
       reset()
     } else if (winners.length) {
       for (const wf of winners) {

@@ -7,6 +7,9 @@
 export const MIN_FINGERS = 2
 export const HOLD_MS = 3000 // fingers must stay stable this long before a pick
 export const REVEAL_MIN_MS = 2500 // winner stays on screen at least this long
+// Groups linger longer: everyone lifts at once to study the split, so the
+// reveal needs to stay put well past the moment all fingers leave the screen.
+export const GROUPS_REVEAL_MIN_MS = 5000
 export const REVEAL_MAX_MS = 8000 // ...and resets after this long no matter what
 
 export const PALETTE = [
