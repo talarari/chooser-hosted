@@ -267,9 +267,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 /* On the landing the name is a clearly-labeled, tappable field. */
 .name-field {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.6rem;
   margin-top: 0.3rem;
 }
 
