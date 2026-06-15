@@ -141,8 +141,10 @@ function commitNameEdit(input: HTMLInputElement): void {
 for (const el of nameEls) {
   const wrap = el.closest('.name-edit-wrap') as HTMLElement
   const input = wrap.querySelector('.name-input') as HTMLInputElement
+  let canceling = false
 
   el.addEventListener('click', () => {
+    canceling = false
     input.value = displayName()
     wrap.classList.add('editing')
     input.select()
@@ -151,10 +153,15 @@ for (const el of nameEls) {
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); commitNameEdit(input) }
-    else if (e.key === 'Escape') { e.preventDefault(); wrap.classList.remove('editing') }
+    else if (e.key === 'Escape') { e.preventDefault(); canceling = true; wrap.classList.remove('editing') }
   })
 
-  input.addEventListener('blur', () => commitNameEdit(input))
+  // blur fires after display:none (e.g. after Enter or Escape) — guard against
+  // Escape committing the edit, and against double-commit on Enter.
+  input.addEventListener('blur', () => {
+    if (canceling) { canceling = false; return }
+    commitNameEdit(input)
+  })
 }
 
 function ensurePeer(peerId: string): Peer {
