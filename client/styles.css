@@ -133,18 +133,12 @@ button.primary {
   background: rgba(20, 24, 38, 0.8);
   border: 1px solid #2a3046;
   border-radius: 999px;
-  padding: 0.35rem 0.85rem 0.35rem 0.5rem;
+  padding: 0.35rem 0.95rem;
   transition: transform 0.12s ease, border-color 0.12s ease;
 }
 
 #home-btn:hover { border-color: #3a4264; }
 #home-btn:active { transform: scale(0.94); }
-
-#home-btn svg {
-  width: 1.7rem;
-  height: 1.7rem;
-  display: block;
-}
 
 #home-btn .brand {
   display: flex;
