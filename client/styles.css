@@ -152,7 +152,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 #install-bar {
   position: absolute;
-  bottom: max(2.5rem, calc(env(safe-area-inset-bottom) + 1.2rem));
+  bottom: max(4rem, calc(env(safe-area-inset-bottom) + 1.5rem));
   left: 50%;
   transform: translateX(-50%);
 }
