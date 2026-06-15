@@ -168,9 +168,23 @@ function applyName(next: string | null): void {
 const nameDialogEl = $('#name-dialog')
 const nameDialogInput = $<HTMLInputElement>('#name-dialog-input')
 
+// The on-screen keyboard overlays the bottom of the layout viewport, so a
+// bottom-anchored sheet gets hidden behind it. Pin the dialog to the *visual*
+// viewport instead (the area above the keyboard) and follow it as it resizes.
+function syncDialogViewport(): void {
+  if (nameDialogEl.hidden) return
+  const vv = window.visualViewport
+  if (!vv) return
+  nameDialogEl.style.height = `${vv.height}px`
+  nameDialogEl.style.top = `${vv.offsetTop}px`
+}
+window.visualViewport?.addEventListener('resize', syncDialogViewport)
+window.visualViewport?.addEventListener('scroll', syncDialogViewport)
+
 function openNameDialog(): void {
   nameDialogInput.value = displayName()
   nameDialogEl.hidden = false
+  syncDialogViewport()
   nameDialogInput.select()
   nameDialogInput.focus()
 }
