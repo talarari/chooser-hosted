@@ -446,7 +446,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 #name-dialog-save:active { filter: brightness(0.88); }
 
-.peer-wrap { position: relative; display: flex; }
+.peer-wrap { position: relative; display: flex; pointer-events: auto; }
 
 #peer-count {
   pointer-events: auto;
