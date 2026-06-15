@@ -396,9 +396,14 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 #tip {
   margin: 0;
   max-width: 32rem;
+  min-height: 2.7em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: var(--muted);
   font-size: 0.9rem;
+  line-height: 1.35;
   padding: 0 2rem;
   pointer-events: none;
   transition: opacity 0.4s;
