@@ -204,7 +204,7 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
   padding: 0;
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.44rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   background-image: var(--brand);
