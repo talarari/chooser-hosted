@@ -550,8 +550,10 @@ function tick(): void {
   draw(ctx, { w: canvas.clientWidth, h: canvas.clientHeight, now, fingers: renderFingers, state, progress, winners, pickedAt })
 
   const n = 1 + peers.size
-  const statusText = connStatus === 'connected' ? 'connected' : connStatus === 'connecting' ? 'connecting…' : 'reconnecting…'
-  peerCountEl.textContent = `${n} device${n === 1 ? '' : 's'} · ${statusText}`
+  // The colored status dot (CSS, keyed off data-status) now carries the
+  // connection state, so the label can stay as a clean device count.
+  peerCountEl.dataset.status = connStatus
+  peerCountEl.textContent = `${n} device${n === 1 ? '' : 's'}`
 
   tipEl.style.opacity = state === 'idle' && fingers.length === 0 ? '1' : '0'
 

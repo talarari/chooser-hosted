@@ -54,14 +54,17 @@ function drawFinger(ctx: CanvasRenderingContext2D, f: RenderFinger, now: number,
   ctx.fill()
   ctx.globalAlpha = (f.local ? 1 : 0.75) * (1 - dim)
 
-  // main ring
+  // main ring, with a soft neon bloom so it reads as a glowing target
   ctx.beginPath()
   ctx.arc(0, 0, r, 0, Math.PI * 2)
   ctx.lineWidth = RING_WIDTH
   ctx.strokeStyle = f.color
+  ctx.shadowColor = f.color
+  ctx.shadowBlur = f.local ? 22 : 14
   if (!f.local) ctx.setLineDash([10, 8])
   ctx.stroke()
   ctx.setLineDash([])
+  ctx.shadowBlur = 0
 
   // countdown arc filling clockwise from 12 o'clock
   if (progress > 0) {
@@ -104,7 +107,10 @@ function drawWinner(ctx: CanvasRenderingContext2D, f: RenderFinger, now: number,
   ctx.arc(0, 0, (RING_RADIUS * 1.25 + 12) * pop, 0, Math.PI * 2)
   ctx.lineWidth = RING_WIDTH
   ctx.strokeStyle = f.color
+  ctx.shadowColor = f.color
+  ctx.shadowBlur = 28
   ctx.stroke()
+  ctx.shadowBlur = 0
 
   ctx.restore()
 }
