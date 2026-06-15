@@ -188,6 +188,31 @@ describe('Chooser hosted — two players in a room', () => {
     await closeAll(p1, p2)
   })
 
+  test('a page reconnecting does not inflate its own device count', async () => {
+    // The other half of the mobile bug: when a page's socket dies silently and it
+    // reconnects, the room must NOT briefly count the same page twice (which made
+    // a lone phone read "2/3 devices"). The reconnect carries a per-session id so
+    // the server evicts the dead socket immediately. Force several reconnects and
+    // assert the count never climbs above 1.
+    const room = `E2E${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+    const ctx = await browser.newContext()
+    const page = await ctx.newPage()
+    await page.goto(`${server.url}/#${room}`)
+    await deviceCount(page, 1)
+
+    for (let i = 0; i < 3; i++) {
+      await page.evaluate(() => window.__net?.reconnect())
+      await page.waitForFunction(
+        () => document.querySelector('#peer-count')?.dataset.status === 'connected',
+        null, { timeout: 15000 })
+    }
+    // Give any ghost sockets a chance to (wrongly) show up before asserting.
+    await page.waitForTimeout(1500)
+    const text = await page.textContent('#peer-count')
+    assert.ok(text.startsWith('1 device'), `expected "1 device" after reconnects, got "${text}"`)
+    await ctx.close()
+  })
+
   // Open two fresh, un-named pages in their own room and wait until connected.
   async function openPair() {
     const room = `E2E${Math.random().toString(36).slice(2, 6).toUpperCase()}`

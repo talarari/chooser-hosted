@@ -40,7 +40,7 @@ export interface Net {
 // socket and reap the latter. Comfortably under typical idle-socket timeouts.
 const PING_MS = 5000
 
-export function connect(roomCode: string, getName: () => string | null, handlers: NetHandlers): Net {
+export function connect(roomCode: string, getName: () => string | null, cid: string, handlers: NetHandlers): Net {
   let ws: WebSocket | null = null
   let closed = false
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
@@ -86,6 +86,7 @@ export function connect(roomCode: string, getName: () => string | null, handlers
     handlers.onStatus('connecting')
     const name = getName()
     const url = `${wsBase()}/ws?room=${encodeURIComponent(roomCode)}` +
+      `&cid=${encodeURIComponent(cid)}` +
       (name ? `&name=${encodeURIComponent(name)}` : '')
     const sock = new WebSocket(url)
     ws = sock

@@ -65,7 +65,10 @@
         <span id="copy-state">⧉</span>
       </button>
       <div class="hud-meta">
-        <span id="peer-count"></span>
+        <div class="peer-wrap">
+          <button id="peer-count" title="Show connected devices" aria-haspopup="true" aria-expanded="false"></button>
+          <div id="peer-list" hidden role="menu" aria-label="Connected devices"></div>
+        </div>
         <button id="name-pill" class="name-chip" title="Change your name"></button>
       </div>
     </header>
