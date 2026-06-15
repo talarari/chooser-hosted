@@ -86,4 +86,50 @@ describe('Chooser hosted — two players in a room', () => {
     const winName = (await winPage.textContent('#name-pill')).trim()
     assert.equal(loserBanner.trim(), `${winName} was chosen`)
   })
+
+  test('players who never chose a name get distinct defaults', async () => {
+    // Regression: the default name was derived from a placeholder id that was
+    // identical on every device, so everyone showed up as the same name.
+    const [p1, p2] = await openPair()
+    const [n1, n2] = await Promise.all([p1.textContent('#name-pill'), p2.textContent('#name-pill')])
+    assert.match(n1.trim(), /^\w+ \w+$/, 'a default name is shown')
+    assert.notEqual(n1.trim(), n2.trim(), 'two un-named players must differ')
+    await closeAll(p1, p2)
+  })
+
+  test('a player leaving drops the device count for everyone else', async () => {
+    const [p1, p2] = await openPair()
+    await p2.context().close() // clean close -> server gets the close event
+    await deviceCount(p1, 1)
+  })
+
+  test('a silently-dropped player is reaped from the device count', async () => {
+    // The headline mobile bug: a socket that dies with no close event (here,
+    // simulated by yanking the network) must still be reaped so the room stops
+    // showing a ghost device.
+    const [p1, p2] = await openPair()
+    await p2.context().setOffline(true)
+    await deviceCount(p1, 1, 30000)
+    await closeAll(p1, p2)
+  })
+
+  // Open two fresh, un-named pages in their own room and wait until connected.
+  async function openPair() {
+    const room = `E2E${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+    const open = async () => {
+      const ctx = await browser.newContext()
+      const page = await ctx.newPage()
+      await page.goto(`${server.url}/#${room}`)
+      return page
+    }
+    const pair = [await open(), await open()]
+    await Promise.all(pair.map((p) => deviceCount(p, 2)))
+    return pair
+  }
+
+  const deviceCount = (page, n, timeout = 15000) => page.waitForFunction(
+    (n) => document.querySelector('#peer-count')?.textContent.startsWith(`${n} device`),
+    n, { timeout })
+
+  const closeAll = (...pages) => Promise.all(pages.map((p) => p.context().close()))
 })

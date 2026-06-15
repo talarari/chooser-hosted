@@ -30,8 +30,15 @@ export interface Net {
   sendFingers(fingers: Fingers): void
   sendName(name: string | null): void
   sendMode(settings: ModeSettings): void
+  // Drop the current socket and immediately open a fresh one (used on resume
+  // from a backgrounded tab, where the old socket may be silently dead).
+  reconnect(): void
   leave(): void
 }
+
+// App-level keepalive so the server can tell a live client from a silently dead
+// socket and reap the latter. Comfortably under typical idle-socket timeouts.
+const PING_MS = 5000
 
 export function connect(roomCode: string, getName: () => string | null, handlers: NetHandlers): Net {
   let ws: WebSocket | null = null
@@ -39,13 +46,29 @@ export function connect(roomCode: string, getName: () => string | null, handlers
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let backoff = 500
 
+  const pingTimer = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try { ws.send(JSON.stringify({ t: 'ping' })) } catch {}
+    }
+  }, PING_MS)
+
   const net: Net = {
     selfId: null,
     sendFingers: (fingers) => send({ t: 'fingers', fingers }),
     sendName: (name) => send({ t: 'name', name }),
     sendMode: (settings) => send({ t: 'mode', ...settings }),
+    reconnect: () => {
+      if (closed) return
+      const old = ws
+      ws = null // so the old socket's close handler no-ops (sock !== ws)
+      try { old?.close() } catch {}
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
+      backoff = 500
+      open()
+    },
     leave: () => {
       closed = true
+      clearInterval(pingTimer)
       if (reconnectTimer) clearTimeout(reconnectTimer)
       try { ws?.close() } catch {}
       ws = null

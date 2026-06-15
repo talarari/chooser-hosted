@@ -78,7 +78,9 @@ let mode: Mode = 'winners'
 let winnerCount = 1
 let groupCount = 2
 
-const PEER_STALE_MS = 3000
+// Tolerate jittery mobile links: the heartbeat refreshes held fingers every 1s,
+// so a peer's fingers only expire after several missed beats, not one hiccup.
+const PEER_STALE_MS = 6000
 
 function serverNow(): number {
   return Date.now() + clockOffset
@@ -86,20 +88,35 @@ function serverNow(): number {
 
 // ---- player name ----
 
+// `myName` is only ever a name the user explicitly chose; the default is derived
+// from a stable per-device id (below), not the server-assigned socket id — that
+// id isn't known until `welcome` arrives, and using a placeholder made every
+// device compute the same default name.
 let myName: string | null = null
 try { myName = sanitizeName(localStorage.getItem('chooser:name')) } catch {}
+
+function randomId(): string {
+  try { return crypto.randomUUID() } catch { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
+}
+
+// A stable id for this device/browser, used only to derive a distinct default
+// display name that's known immediately (no wait for the server) and unique.
+let clientId: string
+try {
+  clientId = localStorage.getItem('chooser:cid') ?? ''
+  if (!clientId) { clientId = randomId(); localStorage.setItem('chooser:cid', clientId) }
+} catch { clientId = randomId() }
 
 function selfId(): string {
   return net?.selfId ?? 'me'
 }
 
-function ensureName(): string {
-  if (!myName) myName = peerName(selfId())
-  return myName
+function displayName(): string {
+  return myName ?? peerName(clientId)
 }
 
 function renderName(): void {
-  for (const el of nameEls) el.textContent = ensureName()
+  for (const el of nameEls) el.textContent = displayName()
 }
 renderName()
 
@@ -109,12 +126,12 @@ function nameOf(peerId: string): string {
 
 for (const el of nameEls) {
   el.addEventListener('click', () => {
-    const next = sanitizeName(prompt('Your name', ensureName()))
+    const next = sanitizeName(prompt('Your name', displayName()))
     if (!next || next === myName) return
     myName = next
     try { localStorage.setItem('chooser:name', myName) } catch {}
     renderName()
-    net?.sendName(myName)
+    net?.sendName(displayName())
   })
 }
 
@@ -213,7 +230,7 @@ function enterRoom(code: string): void {
     requestAnimationFrame(tick)
   }
 
-  net = connect(code, () => ensureName(), {
+  net = connect(code, () => displayName(), {
     onStatus: (status) => { connStatus = status },
     onMessage: handleServerMessage,
   })
@@ -229,7 +246,7 @@ function handleServerMessage(msg: ServerMessage): void {
       applyPhase(msg.phase, msg.stableSince)
       renderName()
       // bring the server (and through it, peers) up to date with our state
-      net?.sendName(myName)
+      net?.sendName(displayName())
       net?.sendFingers(packFingers())
       break
     case 'peerJoin':
@@ -293,6 +310,23 @@ $('#room-pill').addEventListener('click', async () => {
     copyStateEl.textContent = '✓'
     setTimeout(() => (copyStateEl.textContent = '⧉'), 1500)
   } catch {}
+})
+
+// Mobile browsers freeze a backgrounded tab and the socket often dies silently
+// (no close event). After any non-trivial hidden spell, force a fresh
+// connection on return so we don't sit on a dead socket showing stale peers.
+const REJOIN_AFTER_HIDDEN_MS = 8000
+let hiddenAt: number | null = null
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    hiddenAt = Date.now()
+  } else if (net && hiddenAt && Date.now() - hiddenAt > REJOIN_AFTER_HIDDEN_MS) {
+    peers.clear()
+    localFingers.clear()
+    reset()
+    net.reconnect()
+  }
 })
 
 // ---- input ----

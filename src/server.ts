@@ -30,9 +30,17 @@ export default {
   },
 }
 
+// Reap a socket after this long with no message (incl. the client's keepalive
+// ping every 5s). Mobile sockets often die without a close event; this is how a
+// ghost client (and its stale fingers / inflated device count) gets cleaned up.
+const IDLE_TIMEOUT_MS = 20000
+const REAP_INTERVAL_MS = 5000
+
 export class Room implements DurableObject {
   private room: RoomState
   private sockets = new Map<string, WebSocket>()
+  private lastSeen = new Map<string, number>()
+  private reaper: ReturnType<typeof setInterval> | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
 
   constructor(_state: DurableObjectState, _env: Env) {
@@ -81,25 +89,54 @@ export class Room implements DurableObject {
 
     server.accept()
     this.sockets.set(id, server)
+    this.lastSeen.set(id, Date.now())
     this.room.join(id, name)
+    this.startReaper()
 
     server.addEventListener('message', (event) => {
+      this.lastSeen.set(id, Date.now())
       let msg: ClientMessage
       try {
         msg = JSON.parse(typeof event.data === 'string' ? event.data : '') as ClientMessage
       } catch {
         return
       }
+      if (msg.t === 'ping') return // keepalive only — already refreshed lastSeen
       this.room.onMessage(id, msg)
     })
 
-    const drop = () => {
-      if (this.sockets.delete(id)) this.room.leave(id)
-    }
-    server.addEventListener('close', drop)
-    server.addEventListener('error', drop)
+    server.addEventListener('close', () => this.drop(id))
+    server.addEventListener('error', () => this.drop(id))
 
     return new Response(null, { status: 101, webSocket: client })
+  }
+
+  private drop(id: string): void {
+    this.lastSeen.delete(id)
+    if (this.sockets.delete(id)) this.room.leave(id)
+    if (this.sockets.size === 0) this.stopReaper()
+  }
+
+  // Periodically close sockets that have gone quiet — the only way to detect a
+  // client that vanished without a clean close. Runs only while clients exist.
+  private startReaper(): void {
+    if (this.reaper !== null) return
+    this.reaper = setInterval(() => {
+      const now = Date.now()
+      for (const [id, ts] of this.lastSeen) {
+        if (now - ts > IDLE_TIMEOUT_MS) {
+          try { this.sockets.get(id)?.close(1001, 'idle') } catch {}
+          this.drop(id)
+        }
+      }
+    }, REAP_INTERVAL_MS)
+  }
+
+  private stopReaper(): void {
+    if (this.reaper !== null) {
+      clearInterval(this.reaper)
+      this.reaper = null
+    }
   }
 }
 

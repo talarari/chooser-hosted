@@ -27,6 +27,7 @@ export type ClientMessage =
   | { t: 'fingers'; fingers: Fingers }
   | { t: 'name'; name: string | null }
   | { t: 'mode'; mode: Mode; winnerCount: number; groupCount: number }
+  | { t: 'ping' } // liveness keepalive; never reaches the room state machine
 
 // ---- server -> client ----
 
