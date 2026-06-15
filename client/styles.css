@@ -193,8 +193,14 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 .hud-top #home-btn { justify-self: start; }
-.hud-top #peer-count { justify-self: center; }
-.hud-top .name-chip { justify-self: end; }
+.hud-top #room-pill { justify-self: center; }
+
+/* Line below the room code: device status and your name, together. */
+.hud-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
 
 /* The colorful lowercase wordmark doubles as the "back home" button. */
 #home-btn {
@@ -217,10 +223,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 #home-btn:hover { opacity: 0.85; }
 #home-btn:active { transform: scale(0.94); }
 
-/* Room code is the standalone focal point on its own line. */
+/* Room code is the focal point, centered at the very top. */
 #room-pill {
   pointer-events: auto;
-  margin-top: 0.1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
