@@ -198,6 +198,81 @@ $('#count-inc').addEventListener('click', () => {
 
 renderMode()
 
+// ---- PWA install banner ----
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {})
+}
+
+const installBannerEl = $('#install-banner')
+const installAcceptEl = $('#install-accept')
+const installDismissEl = $('#install-dismiss')
+const installHintEl = $('#install-hint')
+
+type InstallPromptEvent = Event & { prompt: () => void; userChoice: Promise<{ outcome: string }> }
+let installPrompt: InstallPromptEvent | null = null
+
+// Already running as an installed app: launched standalone (Android/desktop) or
+// from the iOS home-screen shortcut. Never nag in that case.
+const isInstalled = window.matchMedia('(display-mode: standalone)').matches
+  || (navigator as { standalone?: boolean }).standalone === true
+
+// iOS Safari never fires `beforeinstallprompt`, so there's no native sheet to
+// trigger — we guide the manual Share → Add to Home Screen flow instead.
+// iPadOS reports as a desktop Mac, so detect it via touch points too.
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+function installDismissed(): boolean {
+  try { return localStorage.getItem('chooser:install-dismissed') === '1' } catch { return false }
+}
+
+// Show the banner only on the landing screen (over the fullscreen game it would
+// cover the canvas), and only when this platform can actually install and the
+// user hasn't already done so or waved it off.
+function refreshInstallBanner(): void {
+  if (isInstalled || installDismissed() || landing.hidden) {
+    installBannerEl.hidden = true
+  } else if (installPrompt) {
+    installAcceptEl.hidden = false
+    installHintEl.textContent = 'Add it to your home screen for full-screen play.'
+    installBannerEl.hidden = false
+  } else if (isIOS) {
+    installAcceptEl.hidden = true // no programmatic prompt on iOS
+    installHintEl.textContent = 'Tap the Share button, then “Add to Home Screen”.'
+    installBannerEl.hidden = false
+  } else {
+    installBannerEl.hidden = true // other browsers: wait for beforeinstallprompt
+  }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault() // keep Chrome's mini-infobar from racing our banner
+  installPrompt = e as InstallPromptEvent
+  refreshInstallBanner()
+})
+
+installAcceptEl.addEventListener('click', async () => {
+  if (!installPrompt) return
+  installPrompt.prompt()
+  const { outcome } = await installPrompt.userChoice
+  installPrompt = null
+  if (outcome === 'accepted') installBannerEl.hidden = true
+  else refreshInstallBanner()
+})
+
+installDismissEl.addEventListener('click', () => {
+  try { localStorage.setItem('chooser:install-dismissed', '1') } catch {}
+  installBannerEl.hidden = true
+})
+
+window.addEventListener('appinstalled', () => {
+  installPrompt = null
+  installBannerEl.hidden = true
+})
+
+refreshInstallBanner() // iOS has no event to wait for; evaluate eligibility now
+
 // ---- landing / room entry ----
 
 $('#new-room').addEventListener('click', () => enterRoom(randomCode()))
@@ -224,6 +299,7 @@ function enterRoom(code: string): void {
   roomCodeEl.textContent = code
   landing.hidden = true
   app.hidden = false
+  refreshInstallBanner()
 
   void requestWakeLock()
   resize()
@@ -252,6 +328,7 @@ function leaveRoom(): void {
   location.hash = ''
   app.hidden = true
   landing.hidden = false
+  refreshInstallBanner()
 }
 
 function handleServerMessage(msg: ServerMessage): void {
@@ -568,35 +645,6 @@ function resize(): void {
 }
 
 window.addEventListener('resize', resize)
-
-// ---- PWA install ----
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {})
-}
-
-const installBarEl = $('#install-bar')
-const installBtnEl = $('#install-btn')
-let installPrompt: (Event & { prompt: () => void; userChoice: Promise<{ outcome: string }> }) | null = null
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault()
-  installPrompt = e as typeof installPrompt
-  installBarEl.hidden = false
-})
-
-installBtnEl.addEventListener('click', async () => {
-  if (!installPrompt) return
-  installPrompt.prompt()
-  const { outcome } = await installPrompt.userChoice
-  if (outcome === 'accepted') installBarEl.hidden = true
-  installPrompt = null
-})
-
-window.addEventListener('appinstalled', () => {
-  installBarEl.hidden = true
-  installPrompt = null
-})
 
 async function requestWakeLock(): Promise<void> {
   try {

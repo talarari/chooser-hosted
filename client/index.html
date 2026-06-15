@@ -24,9 +24,6 @@
     </form>
     <button id="name-landing" class="name-chip" title="Change your name"></button>
     <p class="hint">Everyone in a room shares one server instance over WebSockets.</p>
-    <div id="install-bar" hidden>
-      <button id="install-btn">Add to home screen</button>
-    </div>
   </main>
 
   <div id="app" hidden>
@@ -55,6 +52,16 @@
     </header>
     <div id="banner" hidden></div>
     <p id="tip">Touch and hold with at least two fingers — across any devices in the room</p>
+  </div>
+
+  <div id="install-banner" hidden>
+    <img class="install-icon" src="icon.svg" alt="" width="40" height="40" />
+    <div class="install-copy">
+      <strong>Install Chooser</strong>
+      <span id="install-hint"></span>
+    </div>
+    <button id="install-accept" class="primary">Install</button>
+    <button id="install-dismiss" aria-label="Dismiss install banner">×</button>
   </div>
 
   <div id="err" hidden></div>
