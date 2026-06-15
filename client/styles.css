@@ -194,7 +194,6 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 
 .hud-top #home-btn { justify-self: start; }
 .hud-top #room-pill { justify-self: center; }
-.hud-top .name-chip { justify-self: end; }
 
 /* Circular icon button, used for "back home" in the top-left. */
 #home-btn {
@@ -263,6 +262,9 @@ button.primary:active { transform: translateY(1px) scale(0.99); }
 }
 
 .name-chip::after { content: ' ✎'; opacity: 0.5; }
+
+/* The room's name chip sits centered under the room code — show it in full. */
+#name-pill { max-width: none; }
 
 /* On the landing the name is a clearly-labeled, tappable field. */
 .name-field {
